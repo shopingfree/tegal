@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""
+Linux + Termux safe key & mouse demo.
+- Works inside terminal only (not system-wide).
+- Shows pressed keys, mouse clicks, and mouse movements.
+- Exit with ESC or 'q'.
+"""
+
+import curses
+import time
+
+def main(stdscr):
+    curses.curs_set(0)
+    stdscr.nodelay(True)
+    stdscr.keypad(True)
+
+    # Enable mouse tracking
+    curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
+
+    history = []
+    start = time.time()
+
+    def draw():
+        stdscr.erase()
+        stdscr.addstr(0, 0, "Linux/Android (Termux) Keyboard + Mouse Demo")
+        stdscr.addstr(1, 0, "Press keys / click mouse... exit with ESC or 'q'.")
+        stdscr.addstr(2, 0, "-"*50)
+
+        stdscr.addstr(4, 0, "Recent events:")
+        for i, item in enumerate(history[-12:][::-1], 1):
+            stdscr.addstr(4+i, 2, f"{i:>2}. {item}")
+
+        elapsed = time.time() - start
+        h, w = stdscr.getmaxyx()
+        footer = f"Running {elapsed:.1f}s"
+        stdscr.addstr(h-1, 0, footer[:w-1])
+        stdscr.refresh()
+
+    while True:
+        try:
+            k = stdscr.getch()
+            if k == -1:
+                time.sleep(0.02)
+                draw()
+                continue
+
+            # Exit
+            if k in (27, ord('q'), ord('Q')):
+                break
+
+            if k == curses.KEY_MOUSE:
+                try:
+                    _, mx, my, _, bstate = curses.getmouse()
+                    event = f"MOUSE @ ({mx},{my}) buttons={bstate}"
+                except Exception:
+                    event = "MOUSE event (unreadable)"
+                history.append(event)
+
+            else:  # Keyboard
+                if 0 <= k <= 255 and chr(k).isprintable():
+                    event = f"KEY '{chr(k)}'"
+                else:
+                    event = f"KEY code {k}"
+                history.append(event)
+
+            draw()
+
+        except curses.error:
+            pass
+
+curses.wrapper(main)
