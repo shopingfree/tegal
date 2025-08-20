@@ -1,0 +1,23 @@
+import tkinter as tk
+
+def on_key(event):
+    # event.char is the character (if any), event.keysym is the key symbol
+    history.insert(0, f"Key: {event.keysym}   Char: {repr(event.char)}")
+
+root = tk.Tk()
+root.title("Keyboard Demo (in-app only)")
+
+label = tk.Label(root, text="Click the box below and type. Keys are captured ONLY in this window.")
+label.pack(padx=10, pady=10)
+
+entry = tk.Entry(root, width=40)
+entry.pack(padx=10, pady=10)
+entry.focus_set()
+
+history = tk.Listbox(root, width=50, height=10)
+history.pack(padx=10, pady=10)
+
+# Bind keypresses that occur while this window has focus
+root.bind("<Key>", on_key)
+
+root.mainloop()
